@@ -1,0 +1,19 @@
+pipeline {
+  agent any
+  stages {
+    stage('Checkout') {
+      steps { checkout scm }
+    }
+    stage('Install & Build') {
+      steps {
+        dir('app') {            // change 'app' to your subfolder name
+          sh 'ls -la'
+          sh 'node -v || true'
+          sh 'npm ci'           // or 'npm install'
+          sh 'npm run build'    // optional
+        }
+      }
+    }
+  }
+}
+
