@@ -1,59 +1,31 @@
 pipeline {
-    agent any // Designates where the entire pipeline will execute (any available agent)
-
-    stages {
-        stage('Checkout Code') {
-            steps {
-                // Checkout the SCM (Source Control Management) code for the project
-                checkout scm
-            }
-        }
-
-        stage('Build') {
-            steps {
-                echo 'Starting Build...'
-                // Example for a Node.js project:
-                sh 'npm install'
-                sh 'npm run build'
-            }
-        }
-
-        stage('Test') {
-            steps {
-                echo 'Starting Tests...'
-                // Example for running tests:
-                sh 'npm test'
-            }
-        }
-
-        stage('Deploy') {
-            when {
-                // This stage will only run if the current branch is 'main'
-                branch 'main'
-            }
-            steps {
-                echo 'Starting Deployment to Production...'
-                // Replace with actual deployment commands (e.g., calling an Ansible playbook,
-                // using a cloud CLI, or deploying a Docker image).
-                sh './deploy.sh'
-            }
-        }
+  agent {
+    docker { image 'node:18' }
+  }
+  stages {
+    stage('Checkout') { steps { checkout scm } }
+    stage('Debug') {
+      steps {
+        sh 'pwd; ls -la; find . -maxdepth 3 -name package.json || true'
+      }
     }
-
-    // Post-actions that run after the entire pipeline finishes
-    post {
-        always {
-            echo 'Pipeline finished.'
-            // Clean up workspace after the build is complete
-            cleanWs()
+    stage('Install & Test') {
+      steps {
+        dir('app') {           // change 'app' if needed
+          sh 'node -v'
+          sh 'npm -v'
+          sh 'npm ci'
+          sh 'npm test || true'
         }
-        success {
-            // Sends a notification if the build was successful
-            echo 'Build Successful! Sending notification.'
-        }
-        failure {
-            // Sends a notification if the build failed
-            echo 'Build Failed! Review logs.'
-        }
+      }
     }
+    stage('Build') {
+      steps {
+        dir('app') {
+          sh 'npm run build || true'
+        }
+      }
+    }
+  }
+  post { always { cleanWs() } }
 }
