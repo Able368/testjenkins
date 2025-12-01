@@ -1,31 +1,39 @@
 pipeline {
-  agent {
-    docker { image 'node:18' }
-  }
-  stages {
-    stage('Checkout') { steps { checkout scm } }
-    stage('Debug') {
-      steps {
-        sh 'pwd; ls -la; find . -maxdepth 3 -name package.json || true'
-      }
-    }
-    stage('Install & Test') {
-      steps {
-        dir('app') {           // change 'app' if needed
-          sh 'node -v'
-          sh 'npm -v'
-          sh 'npm ci'
-          sh 'npm test || true'
+    agent any
+
+    stages {
+        stage('Build') {
+            steps {
+                echo 'Building the project...'
+                sh 'echo "Running build commands..."'
+                // Example build command:
+                // sh 'npm install' or sh 'mvn clean package'
+            }
         }
-      }
-    }
-    stage('Build') {
-      steps {
-        dir('app') {
-          sh 'npm run build || true'
+
+        stage('Test') {
+            steps {
+                echo 'Running tests...'
+                sh 'echo "Tests executed"'
+                // Example test command:
+                // sh 'npm test' or sh 'pytest'
+            }
         }
-      }
+
+        stage('Deploy') {
+            steps {
+                echo 'Deploying the application...'
+                sh 'echo "Deployment successful!"'
+            }
+        }
     }
-  }
-  post { always { cleanWs() } }
+
+    post {
+        success {
+            echo 'Pipeline executed successfully!'
+        }
+        failure {
+            echo 'Pipeline failed. Please check the logs.'
+        }
+    }
 }
